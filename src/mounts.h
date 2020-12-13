@@ -17,48 +17,44 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#ifndef FS_OUTFIT_H_C56E7A707E3F422C8C93D9BE09916AA3
-#define FS_OUTFIT_H_C56E7A707E3F422C8C93D9BE09916AA3
+#ifndef FS_MOUNTS_H_73716D11906A4C5C9F4A7B68D34C9BA6
+#define FS_MOUNTS_H_73716D11906A4C5C9F4A7B68D34C9BA6
 
-#include "enums.h"
-
-struct Outfit {
-	Outfit(std::string name, uint16_t lookType, bool premium, bool unlocked) :
-		name(std::move(name)), lookType(lookType), premium(premium), unlocked(unlocked) {}
+struct Mount
+{
+	Mount(uint8_t id, uint32_t clientId, std::string name, int32_t speed, int32_t attackSpeed, bool premium/*, bool isDefault*/) :
+		name(std::move(name)), speed(speed), attackSpeed(attackSpeed), clientId(clientId), id(id), premium(premium)/*, isDefault(isDefault)*/ {}
 
 	std::string name;
-	uint16_t lookType;
+	int32_t speed;
+	int32_t attackSpeed;
+	uint32_t clientId;
+	uint8_t id;
 	bool premium;
-	bool unlocked;
+	// bool isDefault;
 };
+typedef std::map<uint32_t, Mount > MountMap;
 
-struct ProtocolOutfit {
-	ProtocolOutfit(const std::string& name, uint16_t lookType, uint8_t addons) :
-		name(name), lookType(lookType), addons(addons) {}
-
-	const std::string& name;
-	uint16_t lookType;
-	uint8_t addons;
-};
-
-class Outfits
+class Mounts
 {
 	public:
-		static Outfits& getInstance() {
-			static Outfits instance;
+		static Mounts& getInstance() {
+			static Mounts instance;
 			return instance;
 		}
-
-		bool loadFromXml();
+		
 		bool reload();
+		bool loadFromXml();
+		Mount* getMountByID(uint8_t id);
+		Mount* getMountByName(const std::string& name);
+		Mount* getMountByClientID(uint16_t clientId);
 
-		const Outfit* getOutfitByLookType(PlayerSex_t sex, uint16_t lookType) const;
-		const std::vector<Outfit>& getOutfits(PlayerSex_t sex) const {
-			return outfits[sex];
+		const std::vector<Mount>& getMounts() const {
+			return mounts;
 		}
 
 	private:
-		std::vector<Outfit> outfits[PLAYERSEX_LAST + 1];
+		std::vector<Mount> mounts;
 };
 
 #endif

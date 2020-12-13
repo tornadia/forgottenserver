@@ -66,6 +66,28 @@ bool Outfits::loadFromXml()
 	return true;
 }
 
+bool Outfits::reload()
+{
+	outfits->clear();
+	bool result = loadFromXml();
+	// if(result) {
+		// for (const auto& it : players) {
+			// it->second->setSex(it->second->getSex());
+			// it->second->setCurrentOutfit(it->second->getCurrentOutfit());
+		// }
+	// }
+	// if(result){
+		// for(AutoList<Player>::listiterator it = Player::listPlayer.list.begin();
+		// it != Player::listPlayer.list.end();
+		// ++it)
+		// {
+			// it->second->setSex(it->second->getSex());
+			// it->second->setCurrentOutfit(it->second->getCurrentOutfit());
+		// }
+	// }
+	return result;
+}
+
 const Outfit* Outfits::getOutfitByLookType(PlayerSex_t sex, uint16_t lookType) const
 {
 	for (const Outfit& outfit : outfits[sex]) {

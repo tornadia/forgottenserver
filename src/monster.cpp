@@ -103,6 +103,10 @@ void Monster::onAttackedCreatureDisappear(bool)
 {
 	attackTicks = 0;
 	extraMeleeAttack = true;
+	// also disabled yes
+	// if(g_config.getBoolean(ConfigManager::MONSTER_SPAWN_WALKBACK)){
+		g_game.internalTeleport(this, getMasterPos());
+	// }
 }
 
 void Monster::onCreatureAppear(Creature* creature, bool isLogin)

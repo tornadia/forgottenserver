@@ -184,6 +184,10 @@ bool Weapon::configureEvent(const pugi::xml_node& node)
 		soul = pugi::cast<uint32_t>(attr.value());
 	}
 
+	if ((attr = node.attribute("exhaustion"))) {
+		exhaustion = std::min<uint8_t>(0, pugi::cast<uint32_t>(attr.value()));
+	}
+
 	if ((attr = node.attribute("prem"))) {
 		premium = attr.as_bool();
 	}
@@ -423,6 +427,14 @@ void Weapon::onUsedWeapon(Player* player, Item* item, Tile* destTile) const
 		if (getSkillType(player, item, skillType, skillPoint)) {
 			player->addSkillAdvance(skillType, skillPoint);
 		}
+	}
+
+	if(!player->hasFlag(PlayerFlag_HasNoExhaustion) && hasExhaustion()){
+		// if(exhaustion == -1)
+			// player->addCombatExhaust(g_config.getNumber(ConfigManager::COMBAT_EXHAUSTED));
+		// else
+		if(exhaustion != 0)
+			player->addCombatExhaust(exhaustion);
 	}
 
 	uint32_t manaCost = getManaCost(player);
@@ -924,6 +936,8 @@ bool WeaponWand::configureEvent(const pugi::xml_node& node)
 		params.combatType = COMBAT_DEATHDAMAGE;
 	} else if (tmpStrValue == "holy") {
 		params.combatType = COMBAT_HOLYDAMAGE;
+	} else if (tmpStrValue == "bleed") {
+		params.combatType = COMBAT_BLEEDDAMAGE;
 	} else {
 		std::cout << "[Warning - WeaponWand::configureEvent] Type \"" << attr.as_string() << "\" does not exist." << std::endl;
 	}

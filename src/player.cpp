@@ -610,12 +610,14 @@ void Player::addStorageValue(const uint32_t key, const int32_t value, const bool
 				value & 0xFF
 			);
 			return;
-		} else {
+		} else if (IS_IN_KEYRANGE(key, MOUNTS_RANGE)) {
+			tameMount(value);
+		} else if (!IS_IN_KEYRANGE(key, MOUNTS_RANGE)) {
 			std::cout << "Warning: unknown reserved key: " << key << " player: " << getName() << std::endl;
 			return;
 		}
 	}
-
+	
 	if (value != -1) {
 		int32_t oldValue;
 		getStorageValue(key, oldValue);
@@ -672,6 +674,11 @@ bool Player::canSeeCreature(const Creature* creature) const
 
 bool Player::canWalkthrough(const Creature* creature) const
 {
+	std::vector<uint32_t>::const_iterator it = std::find(forceWalkthrough.begin(), forceWalkthrough.end(), creature->getID());
+	if(it != forceWalkthrough.end()){
+		return true;
+	}
+	
 	if (group->access || creature->isInGhostMode()) {
 		return true;
 	}
@@ -708,6 +715,11 @@ bool Player::canWalkthrough(const Creature* creature) const
 
 bool Player::canWalkthroughEx(const Creature* creature) const
 {
+	std::vector<uint32_t>::const_iterator it = std::find(forceWalkthrough.begin(), forceWalkthrough.end(), creature->getID());
+	if(it != forceWalkthrough.end()){
+		return true;
+	}
+	
 	if (group->access) {
 		return true;
 	}
@@ -719,6 +731,19 @@ bool Player::canWalkthroughEx(const Creature* creature) const
 
 	const Tile* playerTile = player->getTile();
 	return playerTile && (playerTile->hasFlag(TILESTATE_PROTECTIONZONE) || player->getLevel() <= static_cast<uint32_t>(g_config.getNumber(ConfigManager::PROTECTION_LEVEL)));
+}
+
+void Player::setWalkthrough(const Creature* creature, bool walkthrough)
+{
+	std::vector<uint32_t>::iterator it = std::find(forceWalkthrough.begin(), forceWalkthrough.end(), creature->getID());
+	if(walkthrough && it == forceWalkthrough.end()){
+		forceWalkthrough.push_back(creature->getID());
+	}
+	else if(!walkthrough && it != forceWalkthrough.end()){
+		forceWalkthrough.erase(it);
+	}
+ 
+	sendCreatureWalkthrough(creature, !walkthrough ? canWalkthrough(creature) : walkthrough);
 }
 
 void Player::onReceiveMail() const
@@ -2007,6 +2032,14 @@ void Player::addHealExhaust(uint32_t ticks)
 	addCondition(condition);
 }
 
+void Player::addSpellExhaust(SpellGroups_t group, uint32_t ticks)
+{
+	if(!hasFlag(PlayerFlag_HasNoExhaustion)){
+		Condition* condition = Condition::createCondition(CONDITIONID_DEFAULT, (ConditionType_t)(1 << (20 + group)), ticks, 0);
+		addCondition(condition);
+	}
+}
+
 void Player::addInFightTicks(bool pzlock /*= false*/)
 {
 	if (hasFlag(PlayerFlag_NotGainInFight)) {
@@ -3187,6 +3220,10 @@ void Player::onAddCondition(ConditionType_t type)
 void Player::onAddCombatCondition(ConditionType_t type)
 {
 	switch (type) {
+		case CONDITION_PHYSICAL:
+			sendTextMessage(MESSAGE_STATUS_DEFAULT, "You are wounded.");
+			break;
+			
 		case CONDITION_POISON:
 			sendTextMessage(MESSAGE_STATUS_DEFAULT, "You are poisoned.");
 			break;
@@ -3630,6 +3667,167 @@ bool Player::getOutfitAddons(const Outfit& outfit, uint8_t& addons) const
 	addons = 0;
 	return true;
 }
+
+uint8_t Player::getCurrentMount() const
+{
+	int32_t value;
+	if (getStorageValue(PSTRG_MOUNTS_CURRENTMOUNT, value)) {
+		return value;
+	}
+	return 0;
+}
+
+void Player::setCurrentMount(uint8_t mountId)
+{
+	addStorageValue(PSTRG_MOUNTS_CURRENTMOUNT, mountId);
+}
+
+bool Player::toggleMount(bool mount)
+{
+	if ((OTSYS_TIME() - lastToggleMount) < 3000 && !isMounted()) {
+		sendCancelMessage(RETURNVALUE_YOUAREEXHAUSTED);
+		return false;
+	}
+
+	if (mount) {
+		if (isMounted()) {
+			return false;
+		}
+
+		if (!group->access && tile->hasFlag(TILESTATE_PROTECTIONZONE)) {
+			sendCancelMessage(RETURNVALUE_ACTIONNOTPERMITTEDINPROTECTIONZONE);
+			return false;
+		}
+
+		const Outfit* playerOutfit = Outfits::getInstance().getOutfitByLookType(getSex(), defaultOutfit.lookType);
+		if (!playerOutfit) {
+			return false;
+		}
+
+		uint8_t currentMountId = getCurrentMount();
+		if (currentMountId == 0) {
+			sendOutfitWindow();
+			return false;
+		}
+
+		Mount* currentMount = Mounts::getInstance().getMountByID(currentMountId);
+		if (!currentMount) {
+			return false;
+		}
+
+		if (!hasMount(currentMount)) {
+			setCurrentMount(0);
+			sendOutfitWindow();
+			return false;
+		}
+
+		if (currentMount->premium && !isPremium()) {
+			sendCancelMessage(RETURNVALUE_YOUNEEDPREMIUMACCOUNT);
+			return false;
+		}
+
+		if (hasCondition(CONDITION_OUTFIT)) {
+			sendCancelMessage(RETURNVALUE_NOTPOSSIBLE);
+			return false;
+		}
+
+		defaultOutfit.lookMount = currentMount->clientId;
+
+		// if (currentMount->speed != 0) {
+			// g_game.changeSpeed(this, currentMount->speed);
+		// }
+	} else {
+		if (!isMounted()) {
+			return false;
+		}
+
+		dismount();
+	}
+
+	g_game.internalCreatureChangeOutfit(this, defaultOutfit);
+	lastToggleMount = OTSYS_TIME();
+	return true;
+}
+
+bool Player::tameMount(uint8_t mountId)
+{
+	if (!Mounts::getInstance().getMountByID(mountId)) {
+		return false;
+	}
+
+	const uint8_t tmpMountId = mountId - 1;
+	const uint32_t key = PSTRG_MOUNTS_RANGE_START + (tmpMountId / 31);
+
+	int32_t value;
+	if (getStorageValue(key, value)) {
+		value |= (1 << (tmpMountId % 31));
+	} else {
+		value = (1 << (tmpMountId % 31));
+	}
+
+	addStorageValue(key, value);
+	return true;
+}
+
+bool Player::untameMount(uint8_t mountId)
+{
+	if (!Mounts::getInstance().getMountByID(mountId)) {
+		return false;
+	}
+
+	const uint8_t tmpMountId = mountId - 1;
+	const uint32_t key = PSTRG_MOUNTS_RANGE_START + (tmpMountId / 31);
+
+	int32_t value;
+	if (!getStorageValue(key, value)) {
+		return true;
+	}
+
+	value &= ~(1 << (tmpMountId % 31));
+	addStorageValue(key, value);
+
+	if (getCurrentMount() == mountId) {
+		if (isMounted()) {
+			dismount();
+			g_game.internalCreatureChangeOutfit(this, defaultOutfit);
+		}
+
+		setCurrentMount(0);
+	}
+
+	return true;
+}
+
+bool Player::hasMount(const Mount* mount) const
+{
+	if (isAccessPlayer()) {
+		return true;
+	}
+
+	if (mount->premium && !isPremium()) {
+		return false;
+	}
+
+	const uint8_t tmpMountId = mount->id - 1;
+
+	int32_t value;
+	if (!getStorageValue(PSTRG_MOUNTS_RANGE_START + (tmpMountId / 31), value)) {
+		return false;
+	}
+
+	return ((1 << (tmpMountId % 31)) & value) != 0;
+}
+
+void Player::dismount()
+{
+	// Mount* mount = Mounts::getInstance().getMountByID(getCurrentMount());
+	// if (mount && mount->speed > 0) {
+		// g_game.changeSpeed(this, -mount->speed);
+	// }
+
+	defaultOutfit.lookMount = 0;
+}
+
 
 void Player::setSex(PlayerSex_t newSex)
 {

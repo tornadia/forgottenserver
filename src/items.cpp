@@ -112,6 +112,7 @@ const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributes
 	{"absorbpercentmanadrain", ITEM_PARSE_ABSORBPERCENTMANADRAIN},
 	{"absorbpercentdrown", ITEM_PARSE_ABSORBPERCENTDROWN},
 	{"absorbpercentphysical", ITEM_PARSE_ABSORBPERCENTPHYSICAL},
+	{"absorbpercentbleed", ITEM_PARSE_ABSORBPERCENTBLEED},
 	{"absorbpercenthealing", ITEM_PARSE_ABSORBPERCENTHEALING},
 	{"absorbpercentundefined", ITEM_PARSE_ABSORBPERCENTUNDEFINED},
 	{"suppressdrunk", ITEM_PARSE_SUPPRESSDRUNK},
@@ -123,6 +124,7 @@ const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributes
 	{"suppressfreeze", ITEM_PARSE_SUPPRESSFREEZE},
 	{"suppressdazzle", ITEM_PARSE_SUPPRESSDAZZLE},
 	{"suppresscurse", ITEM_PARSE_SUPPRESSCURSE},
+	{"suppressbleed", ITEM_PARSE_SUPPRESSBLEED},
 	{"field", ITEM_PARSE_FIELD},
 	{"replaceable", ITEM_PARSE_REPLACEABLE},
 	{"partnerdirection", ITEM_PARSE_PARTNERDIRECTION},
@@ -283,7 +285,7 @@ bool Items::loadFromOtb(const std::string& file)
 	} else if (majorVersion != 3) {
 		std::cout << "Old version detected, a newer version of items.otb is required." << std::endl;
 		return false;
-	} else if (minorVersion < CLIENT_VERSION_860_OLD) {
+	} else if (minorVersion < CLIENT_VERSION_870) {
 		std::cout << "A newer version of items.otb is required." << std::endl;
 		return false;
 	}
@@ -1044,6 +1046,11 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 					break;
 				}
 
+				case ITEM_PARSE_ABSORBPERCENTBLEED: {
+					abilities.absorbPercent[combatTypeToIndex(COMBAT_BLEEDDAMAGE)] += pugi::cast<int16_t>(valueAttribute.value());
+					break;
+				}
+
 				case ITEM_PARSE_ABSORBPERCENTHEALING: {
 					abilities.absorbPercent[combatTypeToIndex(COMBAT_HEALING)] += pugi::cast<int16_t>(valueAttribute.value());
 					break;
@@ -1091,7 +1098,7 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 
 				case ITEM_PARSE_SUPPRESSPHYSICAL: {
 					if (valueAttribute.as_bool()) {
-						abilities.conditionSuppressions |= CONDITION_BLEEDING;
+						abilities.conditionSuppressions |= CONDITION_PHYSICAL;
 					}
 					break;
 				}
@@ -1117,6 +1124,13 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 					break;
 				}
 
+				case ITEM_PARSE_SUPPRESSBLEED: {
+					if (valueAttribute.as_bool()) {
+						abilities.conditionSuppressions |= CONDITION_BLEEDING;
+					}
+					break;
+				}
+
 				case ITEM_PARSE_FIELD: {
 					it.group = ITEM_GROUP_MAGICFIELD;
 					it.type = ITEM_TYPE_MAGICFIELD;
@@ -1138,6 +1152,9 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 						conditionDamage = new ConditionDamage(CONDITIONID_COMBAT, CONDITION_DROWN);
 						combatType = COMBAT_DROWNDAMAGE;
 					} else if (tmpStrValue == "physical") {
+						conditionDamage = new ConditionDamage(CONDITIONID_COMBAT, CONDITION_PHYSICAL);
+						combatType = COMBAT_PHYSICALDAMAGE;
+					} else if (tmpStrValue == "bleed") {
 						conditionDamage = new ConditionDamage(CONDITIONID_COMBAT, CONDITION_BLEEDING);
 						combatType = COMBAT_PHYSICALDAMAGE;
 					} else {

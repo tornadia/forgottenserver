@@ -201,6 +201,12 @@ bool ConfigManager::load()
 	integer[SERVER_SAVE_NOTIFY_DURATION] = getGlobalNumber(L, "serverSaveNotifyDuration", 5);
 	integer[YELL_MINIMUM_LEVEL] = getGlobalNumber(L, "yellMinimumLevel", 2);
 
+	integer[MONSTER_SPAWN_WALKBACK] = getGlobalBoolean(L, "monster_spawn_walkback", true);
+	integer[DISMOUNT_IN_PZ] = getGlobalBoolean(L, "dismount_player_in_pz", true);  
+	integer[ENABLE_COOLDOWN] = getGlobalBoolean(L, "enable_cooldown", true);
+	integer[ENABLE_MOUNTS] = getGlobalBoolean(L, "enable_mounts", true);
+	integer[MOUNT_TIME] = getGlobalNumber(L, "mount_time", 2000);
+	
 	loaded = true;
 	lua_close(L);
 	return true;

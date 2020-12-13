@@ -634,6 +634,7 @@ CombatTypeNames combatTypeNames = {
 	{COMBAT_ICEDAMAGE, 		"ice"},
 	{COMBAT_HOLYDAMAGE, 		"holy"},
 	{COMBAT_DEATHDAMAGE, 		"death"},
+	{COMBAT_BLEEDDAMAGE, 		"bleed"},
 };
 
 AmmoTypeNames ammoTypeNames = {

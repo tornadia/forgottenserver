@@ -610,7 +610,7 @@ void Game::playerMoveThing(uint32_t playerId, const Position& fromPos,
 			return;
 		}
 
-		if (Position::areInRange<1, 1, 0>(movingCreature->getPosition(), player->getPosition())) {
+		if (!player->hasFlag(PlayerFlag_CanMoveAnything) && Position::areInRange<1, 1, 0>(movingCreature->getPosition(), player->getPosition())) {
 			SchedulerTask* task = createSchedulerTask(1000,
 			                      std::bind(&Game::playerMoveCreatureByID, this, player->getID(),
 			                                  movingCreature->getID(), movingCreature->getPosition(), tile->getPosition()));
@@ -662,7 +662,7 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 
 	player->setNextActionTask(nullptr);
 
-	if (!Position::areInRange<1, 1, 0>(movingCreatureOrigPos, player->getPosition())) {
+	if (!player->hasFlag(PlayerFlag_CanMoveAnything) && !Position::areInRange<1, 1, 0>(movingCreatureOrigPos, player->getPosition())) {
 		//need to walk to the creature first before moving it
 		std::forward_list<Direction> listDir;
 		if (player->getPathTo(movingCreatureOrigPos, listDir, 0, 1, true, true)) {
@@ -686,13 +686,13 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 	//check throw distance
 	const Position& movingCreaturePos = movingCreature->getPosition();
 	const Position& toPos = toTile->getPosition();
-	if ((Position::getDistanceX(movingCreaturePos, toPos) > movingCreature->getThrowRange()) || (Position::getDistanceY(movingCreaturePos, toPos) > movingCreature->getThrowRange()) || (Position::getDistanceZ(movingCreaturePos, toPos) * 4 > movingCreature->getThrowRange())) {
+	if (!player->hasFlag(PlayerFlag_CanMoveAnything) && ((Position::getDistanceX(movingCreaturePos, toPos) > movingCreature->getThrowRange()) || (Position::getDistanceY(movingCreaturePos, toPos) > movingCreature->getThrowRange()) || (Position::getDistanceZ(movingCreaturePos, toPos) * 4 > movingCreature->getThrowRange()))) {
 		player->sendCancelMessage(RETURNVALUE_DESTINATIONOUTOFREACH);
 		return;
 	}
 
 	if (player != movingCreature) {
-		if (toTile->hasFlag(TILESTATE_BLOCKPATH)) {
+		if (!player->hasFlag(PlayerFlag_CanMoveAnything) && toTile->hasFlag(TILESTATE_BLOCKPATH)) {
 			player->sendCancelMessage(RETURNVALUE_NOTENOUGHROOM);
 			return;
 		} else if ((movingCreature->getZone() == ZONE_PROTECTION && !toTile->hasFlag(TILESTATE_PROTECTIONZONE)) || (movingCreature->getZone() == ZONE_NOPVP && !toTile->hasFlag(TILESTATE_NOPVPZONE))) {
@@ -701,7 +701,7 @@ void Game::playerMoveCreature(Player* player, Creature* movingCreature, const Po
 		} else {
 			if (CreatureVector* tileCreatures = toTile->getCreatures()) {
 				for (Creature* tileCreature : *tileCreatures) {
-					if (!tileCreature->isInGhostMode()) {
+					if (!player->hasFlag(PlayerFlag_CanMoveAnything) && !tileCreature->isInGhostMode()) {
 						player->sendCancelMessage(RETURNVALUE_NOTENOUGHROOM);
 						return;
 					}
@@ -894,12 +894,12 @@ void Game::playerMoveItem(Player* player, const Position& fromPos,
 
 	const Position& playerPos = player->getPosition();
 	const Position& mapFromPos = fromCylinder->getTile()->getPosition();
-	if (playerPos.z != mapFromPos.z) {
+	if (!player->hasFlag(PlayerFlag_CanMoveAnything) && playerPos.z != mapFromPos.z) {
 		player->sendCancelMessage(playerPos.z > mapFromPos.z ? RETURNVALUE_FIRSTGOUPSTAIRS : RETURNVALUE_FIRSTGODOWNSTAIRS);
 		return;
 	}
 
-	if (!Position::areInRange<1, 1>(playerPos, mapFromPos)) {
+	if (!player->hasFlag(PlayerFlag_CanMoveAnything) && !Position::areInRange<1, 1>(playerPos, mapFromPos)) {
 		//need to walk to the item first before using it
 		std::forward_list<Direction> listDir;
 		if (player->getPathTo(item->getPosition(), listDir, 0, 1, true, true)) {
@@ -975,14 +975,14 @@ void Game::playerMoveItem(Player* player, const Position& fromPos,
 		}
 	}
 
-	if ((Position::getDistanceX(playerPos, mapToPos) > item->getThrowRange()) ||
+	if (!player->hasFlag(PlayerFlag_CanMoveAnything) && ((Position::getDistanceX(playerPos, mapToPos) > item->getThrowRange()) ||
 	        (Position::getDistanceY(playerPos, mapToPos) > item->getThrowRange()) ||
-	        (Position::getDistanceZ(mapFromPos, mapToPos) * 4 > item->getThrowRange())) {
+	        (Position::getDistanceZ(mapFromPos, mapToPos) * 4 > item->getThrowRange()))) {
 		player->sendCancelMessage(RETURNVALUE_DESTINATIONOUTOFREACH);
 		return;
 	}
 
-	if (!canThrowObjectTo(mapFromPos, mapToPos)) {
+	if (!player->hasFlag(PlayerFlag_CanMoveAnything) && !canThrowObjectTo(mapFromPos, mapToPos)) {
 		player->sendCancelMessage(RETURNVALUE_CANNOTTHROW);
 		return;
 	}
@@ -2998,8 +2998,29 @@ void Game::playerTurn(uint32_t playerId, Direction dir)
 		return;
 	}
 
-	player->resetIdleTime();
-	internalCreatureTurn(player, dir);
+	if(player->getDirection() != dir) {
+		player->resetIdleTime();
+		internalCreatureTurn(player, dir);
+	} else {
+		if(!player->hasFlag(PlayerFlag_CanTurnHop))
+			return;
+
+		Position pos = getNextPosition(dir, player->getPosition());
+		Tile* tile = map.getTile(pos);
+		if(!tile || !tile->getGround())
+			return;
+
+		player->resetIdleTime();
+		ReturnValue ret = tile->queryAdd(0, *player, 1, FLAG_IGNOREBLOCKITEM);
+		if (ret != RETURNVALUE_NOTENOUGHROOM && (ret != RETURNVALUE_NOTPOSSIBLE || player->hasFlag(PlayerFlag_CanTurnHop))
+			&& (ret != RETURNVALUE_PLAYERISNOTINVITED || player->hasFlag(PlayerFlag_CanEditHouses))) {
+			internalTeleport(player, pos, true);
+			return;
+		}
+
+		player->sendCancelMessage(ret);
+		return;
+	}
 }
 
 void Game::playerRequestOutfit(uint32_t playerId)
@@ -3016,6 +3037,16 @@ void Game::playerRequestOutfit(uint32_t playerId)
 	player->sendOutfitWindow();
 }
 
+void Game::playerToggleMount(uint32_t playerId, bool mount)
+{
+	Player* player = getPlayerByID(playerId);
+	if (!player) {
+		return;
+	}
+
+	player->toggleMount(mount);
+}
+
 void Game::playerChangeOutfit(uint32_t playerId, Outfit_t outfit)
 {
 	if (!g_config.getBoolean(ConfigManager::ALLOW_CHANGEOUTFIT)) {
@@ -3025,6 +3056,36 @@ void Game::playerChangeOutfit(uint32_t playerId, Outfit_t outfit)
 	Player* player = getPlayerByID(playerId);
 	if (!player) {
 		return;
+	}
+
+	const Outfit* playerOutfit = Outfits::getInstance().getOutfitByLookType(player->getSex(), outfit.lookType);
+	if (!playerOutfit) {
+		outfit.lookMount = 0;
+	}
+
+	if (outfit.lookMount != 0) {
+		Mount* mount = Mounts::getInstance().getMountByClientID(outfit.lookMount);
+		if (!mount) {
+			return;
+		}
+
+		if (!player->hasMount(mount)) {
+			return;
+		}
+
+		if (player->isMounted()) {
+			//Mount* prevMount = Mounts::getInstance().getMountByID(player->getCurrentMount());
+			//if (prevMount) {
+				//changeSpeed(player, mount->speed - prevMount->speed);
+			//}
+
+			player->setCurrentMount(mount->id);
+		} else {
+			player->setCurrentMount(mount->id);
+			//outfit.lookMount = 0;
+		}
+	} else if (player->isMounted()) {
+		player->dismount();
 	}
 
 	if (player->canWear(outfit.lookType, outfit.lookAddons)) {
@@ -3401,7 +3462,7 @@ void Game::checkCreatures(size_t index)
 
 void Game::changeSpeed(Creature* creature, int32_t varSpeedDelta)
 {
-	int32_t varSpeed = creature->getSpeed() - creature->getBaseSpeed();
+	int32_t varSpeed = creature->getSpeed() - creature->getBaseSpeed() - creature->getMountSpeed();
 	varSpeed += varSpeedDelta;
 
 	creature->setSpeed(varSpeed);
@@ -3493,6 +3554,10 @@ bool Game::combatBlockHit(CombatDamage& damage, Creature* attacker, Creature* ta
 				}
 				case COMBAT_HOLYDAMAGE: {
 					hitEffect = CONST_ME_HOLYDAMAGE;
+					break;
+				}
+				case COMBAT_BLEEDDAMAGE: {
+					hitEffect = CONST_ME_DRAWBLOOD;
 					break;
 				}
 				default: {
@@ -3613,6 +3678,11 @@ void Game::combatGetTypeInfo(CombatType_t combatType, Creature* target, TextColo
 		case COMBAT_LIFEDRAIN: {
 			color = TEXTCOLOR_RED;
 			effect = CONST_ME_MAGIC_RED;
+			break;
+		}
+		case COMBAT_BLEEDDAMAGE: {
+			color = TEXTCOLOR_RED;
+			effect = CONST_ME_DRAWBLOOD;
 			break;
 		}
 		default: {
@@ -4944,6 +5014,12 @@ bool Game::reload(ReloadTypes_t reloadType)
 			g_weapons->loadDefaults();
 			return results;
 		}
+		case RELOAD_TYPE_OUTFITS:
+			Outfits::getInstance().reload();
+			break;
+		case RELOAD_TYPE_MOUNTS:
+			Mounts::getInstance().reload();
+			break;
 
 		case RELOAD_TYPE_SCRIPTS: {
 			// commented out stuff is TODO, once we approach further in revscriptsys

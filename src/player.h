@@ -24,6 +24,7 @@
 #include "container.h"
 #include "cylinder.h"
 #include "outfit.h"
+#include "mounts.h"
 #include "enums.h"
 #include "vocation.h"
 #include "protocolgame.h"
@@ -85,6 +86,13 @@ struct OutfitEntry {
 	uint8_t addons;
 };
 
+// TODO : may add this later for cost efficiency or w/e
+// struct MountEntry {
+	// constexpr MountEntry(uint16_t mountType) : mountType(mountType) {}
+
+	// uint16_t mountType;
+// };
+
 struct Skill {
 	uint64_t tries = 0;
 	uint16_t level = 10;
@@ -95,6 +103,8 @@ using MuteCountMap = std::map<uint32_t, uint32_t>;
 
 static constexpr int32_t PLAYER_MAX_SPEED = 1500;
 static constexpr int32_t PLAYER_MIN_SPEED = 10;
+const int32_t MAX_STAMINA = 42 * 60 * 60 * 1000;
+const int32_t MAX_STAMINA_MINUTES = MAX_STAMINA / 60000;
 
 class Player final : public Creature, public Cylinder
 {
@@ -164,6 +174,13 @@ class Player final : public Creature, public Cylinder
 		uint16_t getStaminaMinutes() const {
 			return staminaMinutes;
 		}
+		// int32_t getStamina() {return stamina;} // fixme: not in use
+		// int32_t getSpentStamina() {return MAX_STAMINA - stamina;}
+		int32_t getSpentStaminaMinutes() {return MAX_STAMINA_MINUTES - staminaMinutes;}
+
+		//spell exhaustion
+		void setExhaustion(uint16_t spellId, uint32_t exhaustion) {exhaustionMap[spellId] = int64_t(exhaustion) + OTSYS_TIME();}
+		bool hasExhaustion(uint16_t spellId) {return (exhaustionMap[spellId] > OTSYS_TIME());}
 
 		uint64_t getBankBalance() const {
 			return bankBalance;
@@ -453,6 +470,7 @@ class Player final : public Creature, public Cylinder
 
 		bool canWalkthrough(const Creature* creature) const;
 		bool canWalkthroughEx(const Creature* creature) const;
+		void setWalkthrough(const Creature* creature, bool walkthrough);
 
 		RaceType_t getRace() const override {
 			return RACE_BLOOD;
@@ -579,6 +597,7 @@ class Player final : public Creature, public Cylinder
 
 		void addCombatExhaust(uint32_t ticks);
 		void addHealExhaust(uint32_t ticks);
+		void addSpellExhaust(SpellGroups_t group, uint32_t ticks);
 		void addInFightTicks(bool pzlock = false);
 
 		uint64_t getGainedExperience(Creature* attacker) const override;
@@ -627,6 +646,17 @@ class Player final : public Creature, public Cylinder
 		bool removeOutfitAddon(uint16_t lookType, uint8_t addons);
 		bool getOutfitAddons(const Outfit& outfit, uint8_t& addons) const;
 
+		uint8_t getCurrentMount() const;
+		void setCurrentMount(uint8_t mountId);
+		bool isMounted() const {
+			return defaultOutfit.lookMount != 0;
+		}
+		bool toggleMount(bool mount);
+		bool tameMount(uint8_t mountId);
+		bool untameMount(uint8_t mountId);
+		bool hasMount(const Mount* mount) const;
+		void dismount();
+		
 		bool canLogout();
 
 		size_t getMaxVIPEntries() const;
@@ -925,6 +955,11 @@ class Player final : public Creature, public Cylinder
 				client->sendOutfitWindow();
 			}
 		}
+		void sendSpellCooldown(uint16_t spellId, uint32_t cooldown, bool isGroup) {
+			if(client) {
+				client->sendSpellCooldown(spellId, cooldown, isGroup);
+			}
+		}
 		void sendCloseContainer(uint8_t cid) {
 			if (client) {
 				client->sendCloseContainer(cid);
@@ -1052,6 +1087,7 @@ class Player final : public Creature, public Cylinder
 		std::map<uint32_t, int32_t> storageMap;
 
 		std::vector<OutfitEntry> outfits;
+		// std::vector<MountEntry> mounts; // not using depr. behavior
 		GuildWarVector guildWarVector;
 
 		std::list<ShopInfo> shopItemList;
@@ -1126,6 +1162,9 @@ class Player final : public Creature, public Cylinder
 		int32_t bloodHitCount = 0;
 		int32_t shieldBlockCount = 0;
 		int32_t idleTime = 0;
+		int64_t lastToggleMount = 0;
+		std::vector<uint32_t> forceWalkthrough;
+		std::map<uint16_t, int64_t> exhaustionMap;	
 
 		uint16_t staminaMinutes = 2520;
 		uint16_t maxWriteLen = 0;
@@ -1168,7 +1207,8 @@ class Player final : public Creature, public Cylinder
 		bool isPromoted() const;
 
 		uint32_t getAttackSpeed() const {
-			return vocation->getAttackSpeed();
+			// return vocation->getAttackSpeed();
+			return std::max(0U, vocation->getAttackSpeed() - getMountAttackSpeed());
 		}
 
 		static uint8_t getPercentLevel(uint64_t count, uint64_t nextLevelCount);

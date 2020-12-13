@@ -146,38 +146,212 @@ enum ShootType_t : uint8_t {
 	CONST_ANI_WEAPONTYPE = 0xFE, // 254
 };
 
+enum SpellGroups_t {
+	SPELLGROUP_NONE = 0x00,
+	SPELLGROUP_MELEE = 0x01,
+	SPELLGROUP_HEALING = 0x02,
+	SPELLGROUP_SUPPORT = 0x03,
+	SPELLGROUP_SPECIAL = 0x04
+};
+
+enum Spells_t {
+	SPELL_NONE                    = 0x00,
+	SPELL_LIGHT_HEALING           = 0x01,
+	SPELL_INTENSE_HEALING         = 0x02,
+	SPELL_ULTIMATE_HEALING        = 0x03,
+	SPELL_INTENSE_HEALING_RUNE    = 0x04,
+	SPELL_ULTIMATE_HEALING_RUNE   = 0x05,
+	SPELL_HASTE                   = 0x06,
+	SPELL_LIGHT_MAGIC_MISSILE     = 0x07,
+	SPELL_HEAVY_MAGIC_MISSILE     = 0x08,
+	SPELL_SUMMON_CREATURE         = 0x09,
+	SPELL_LIGHT                   = 0x0A,
+	SPELL_GREAT_LIGHT             = 0x0B,
+	SPELL_CONVINCE_CREATURE       = 0x0C,
+	SPELL_ENERGY_WAVE             = 0x0D,
+	SPELL_CHAMELEON               = 0x0E,
+	SPELL_FIREBALL                = 0x0F,
+	SPELL_GREAT_FIREBALL          = 0x10,
+	SPELL_FIREBOMB                = 0x11,
+	SPELL_EXPLOSION               = 0x12,
+	SPELL_FIRE_WAVE               = 0x13,
+	SPELL_FIND_PERSON             = 0x14,
+	SPELL_SUDDEN_DEATH            = 0x15,
+	SPELL_ENERGY_BEAM             = 0x16,
+	SPELL_GREAT_ENERGY_BEAM       = 0x17,
+	SPELL_HELLS_CORE              = 0x18,
+	SPELL_FIRE_FIELD              = 0x19,
+	SPELL_POISON_FIELD            = 0x1A,
+	SPELL_ENERGY_FIELD            = 0x1B,
+	SPELL_FIRE_WALL               = 0x1C,
+	SPELL_CURE_POISON             = 0x1D,
+	SPELL_DESTROY_FIELD           = 0x1E,
+	SPELL_ANTIDOTE_RUNE           = 0x1F,
+	SPELL_POISON_WALL             = 0x20,
+	SPELL_ENERGY_WALL             = 0x21,
+	SPELL_UNKNOWN_1               = 0x22,
+	SPELL_UNKNOWN_2               = 0x23,
+	SPELL_SALVATION               = 0x24,
+	SPELL_MOVE                    = 0x25,
+	SPELL_CREATURE_ILLUSION       = 0x26,
+	SPELL_STRONG_HASTE            = 0x27,
+	SPELL_UNKNOWN_3               = 0x28,
+	SPELL_UNKNOWN_4               = 0x29,
+	SPELL_FOOD                    = 0x2A,
+	SPELL_STRONG_ICE_WAVE         = 0x2B,
+	SPELL_MAGIC_SHIELD            = 0x2C,
+	SPELL_INVISIBLE               = 0x2D,
+	SPELL_UNKNOWN_5               = 0x2E,
+	SPELL_UNKNOWN_6               = 0x2F,
+	SPELL_POISONED_ARROW          = 0x30,
+	SPELL_EXPLOSIVE_ARROW         = 0x31,
+	SPELL_SOULFIRE                = 0x32,
+	SPELL_CONJURE_ARROW           = 0x33,
+	SPELL_RETRIEVE_FRIEND         = 0x34,
+	SPELL_UNKNOWN_7               = 0x35,
+	SPELL_PARALYZE                = 0x36,
+	SPELL_ENERGYBOMB              = 0x37,
+	SPELL_WRATH_OF_NATURE         = 0x38,
+	SPELL_STRONG_ETHEREAL_SPEAR   = 0x39,
+	SPELL_UNKNOWN_8               = 0x3A,
+	SPELL_FRONT_SWEEP             = 0x3B,
+	SPELL_UNKNOWN_9               = 0x3C,
+	SPELL_BRUTAL_STRIKE           = 0x3D,
+	SPELL_ANNIHILATION            = 0x3E,
+	SPELL_UNKNOWN_10              = 0x3F,
+	SPELL_UNKNOWN_11              = 0x40,
+	SPELL_UNKNOWN_12              = 0x41,
+	SPELL_UNKNOWN_13              = 0x42,
+	SPELL_UNKNOWN_14              = 0x43,
+	SPELL_UNKNOWN_15              = 0x44,
+	SPELL_UNKNOWN_16              = 0x45,
+	SPELL_UNKNOWN_17              = 0x46,
+	SPELL_INVITE_GUESTS           = 0x47,
+	SPELL_INVITE_SUBOWNERS        = 0x48,
+	SPELL_KICK_GUEST              = 0x49,
+	SPELL_EDIT_DOOR               = 0x4A,
+	SPELL_ULTIMATE_LIGHT          = 0x4B,
+	SPELL_MAGIC_ROPE              = 0x4C,
+	SPELL_STALAGMITE              = 0x4D,
+	SPELL_DESINTEGRATE            = 0x4E,
+	SPELL_CONJURE_BOLT            = 0x4F,
+	SPELL_BERSERK                 = 0x50,
+	SPELL_LEVITATE                = 0x51,
+	SPELL_MASS_HEALING            = 0x52,
+	SPELL_ANIMATE_DEAD            = 0x53,
+	SPELL_HEAL_FRIEND             = 0x54,
+	SPELL_UNDEAD_LEGION           = 0x55,
+	SPELL_MAGIC_WALL              = 0x56,
+	SPELL_DEATH_STRIKE            = 0x57,
+	SPELL_ENERGY_STRIKE           = 0x58,
+	SPELL_FLAME_STRIKE            = 0x59,
+	SPELL_CANCEL_INVISIBILITY     = 0x5A,
+	SPELL_POISONBOMB              = 0x5B,
+	SPELL_ENCHANT_STAFF           = 0x5C,
+	SPELL_CHALLENGE               = 0x5D,
+	SPELL_WILD_GROWTH             = 0x5E,
+	SPELL_POWER_BOLT              = 0x5F,
+	SPELL_UNKNOWN_18              = 0x60,
+	SPELL_UNKNOWN_19              = 0x61,
+	SPELL_UNKNOWN_20              = 0x62,
+	SPELL_UNKNOWN_21              = 0x63,
+	SPELL_UNKNOWN_22              = 0x64,
+	SPELL_UNKNOWN_23              = 0x65,
+	SPELL_UNKNOWN_24              = 0x66,
+	SPELL_UNKNOWN_25              = 0x67,
+	SPELL_UNKNOWN_26              = 0x68,
+	SPELL_FIERCE_BERSERK          = 0x69,
+	SPELL_GROUNDSHAKER            = 0x6A,
+	SPELL_WHIRLWIND_THROW         = 0x6B,
+	SPELL_SNIPER_ARROW            = 0x6C,
+	SPELL_PIERCING_BOLT           = 0x6D,
+	SPELL_ENCHANT_SPEAR           = 0x6E,
+	SPELL_ETHEREAL_SPEAR          = 0x6F,
+	SPELL_ICE_STRIKE              = 0x70,
+	SPELL_TERRA_STRIKE            = 0x71,
+	SPELL_ICICLE                  = 0x72,
+	SPELL_AVALANCHE               = 0x73,
+	SPELL_STONE_SHOWER            = 0x74,
+	SPELL_THUNDERSTORM            = 0x75,
+	SPELL_ETERNAL_WINTER          = 0x76,
+	SPELL_RAGE_OF_THE_SKIES       = 0x77,
+	SPELL_TERRA_WAVE              = 0x78,
+	SPELL_ICE_WAVE                = 0x79,
+	SPELL_DIVINE_MISSILE          = 0x7A,
+	SPELL_WOUND_CLEANSING         = 0x7B,
+	SPELL_DIVINE_CALDERA          = 0x7C,
+	SPELL_DIVINE_HEALING          = 0x7D,
+	SPELL_TRAIN_PARTY             = 0x7E,
+	SPELL_PROTECT_PARTY           = 0x7F,
+	SPELL_HEAL_PARTY              = 0x80,
+	SPELL_ENCHANT_PARTY           = 0x81,
+	SPELL_HOLY_MISSILE            = 0x82,
+	SPELL_CHARGE                  = 0x83,
+	SPELL_PROTECTOR               = 0x84,
+	SPELL_BLOOD_RAGE              = 0x85,
+	SPELL_SWIFT_FOOT              = 0x86,
+	SPELL_SHARPSHOOTER            = 0x87,
+	SPELL_UNKNOWN_27              = 0x88,
+	SPELL_UNKNOWN_28              = 0x89,
+	SPELL_IGNITE                  = 0x8A,
+	SPELL_CURSE                   = 0x8B,
+	SPELL_ELECTRIFY               = 0x8C,
+	SPELL_INFLICT_WOUND           = 0x8D,
+	SPELL_ENVENOM                 = 0x8E,
+	SPELL_HOLY_FLASH              = 0x8F,
+	SPELL_CURE_BLEEDING           = 0x90,
+	SPELL_CURE_BURNING            = 0x91,
+	SPELL_CURE_ELECTRIFICATION    = 0x92,
+	SPELL_CURE_CURSE              = 0x93,
+	SPELL_PHYSICAL_STRIKE         = 0x94,
+	SPELL_LIGHTNING               = 0x95,
+	SPELL_STRONG_FLAME_STRIKE     = 0x96,
+	SPELL_STRONG_ENERGY_STRIKE    = 0x97,
+	SPELL_STRONG_ICE_STRIKE       = 0x98,
+	SPELL_STRONG_TERRA_STRIKE     = 0x99,
+	SPELL_ULTIMATE_FLAME_STRIKE   = 0x9A,
+	SPELL_ULTIMATE_ENERGY_STRIKE  = 0x9B,
+	SPELL_ULTIMATE_ICE_STRIKE     = 0x9C,
+	SPELL_ULTIMATE_TERRA_STRIKE   = 0x9D,
+	SPELL_INTENSE_WOUND_CLEANSING = 0x9E,
+	SPELL_RECOVERY                = 0x9F,
+	SPELL_INTENSE_RECOVERY        = 0xA0
+};
+
 enum SpeakClasses : uint8_t {
-	TALKTYPE_SAY = 1,
-	TALKTYPE_WHISPER = 2,
-	TALKTYPE_YELL = 3,
-	TALKTYPE_PRIVATE_PN = 4,
-	TALKTYPE_PRIVATE_NP = 5,
-	TALKTYPE_PRIVATE = 6,
-	TALKTYPE_CHANNEL_Y = 7,
-	TALKTYPE_CHANNEL_W = 8,
-	TALKTYPE_RVR_CHANNEL = 9,
-	TALKTYPE_RVR_ANSWER = 10,
-	TALKTYPE_RVR_CONTINUE = 11,
-	TALKTYPE_BROADCAST = 12,
-	TALKTYPE_CHANNEL_R1 = 13, //red - #c text
-	TALKTYPE_PRIVATE_RED = 14, //@name@text
-	TALKTYPE_CHANNEL_O = 15, //@name@text
-	TALKTYPE_CHANNEL_R2 = 17, //#d
-	TALKTYPE_MONSTER_SAY = 19,
-	TALKTYPE_MONSTER_YELL = 20,
+	TALKTYPE_SAY = 1, //normal talk
+	TALKTYPE_WHISPER = 2, //whispering - #w text
+	TALKTYPE_YELL = 3, //yelling - #y text
+	TALKTYPE_PRIVATE_PN = 4, //Player-to-NPC speaking(NPCs channel)
+	TALKTYPE_PRIVATE_NP = 5, //NPC-to-Player speaking
+	TALKTYPE_PRIVATE = 6, //Players speaking privately to players
+	TALKTYPE_CHANNEL_Y = 7, //Yellow message in chat
+	TALKTYPE_CHANNEL_W = 8, //White message in chat
+	TALKTYPE_BROADCAST = 9, //Broadcast a message - #b
+	TALKTYPE_CHANNEL_R1 = 10, //Talk red on chat - #c text
+	TALKTYPE_PRIVATE_RED = 11, //Red private - @name@text
+	TALKTYPE_CHANNEL_O = 12, //Talk orange on text - @name@text
+	TALKTYPE_MONSTER_SAY = 13, // Talk orange
+	TALKTYPE_MONSTER_YELL = 14, // Yell orange
+	// removed from game
+	TALKTYPE_RVR_CHANNEL = 254, //Reporting rule violation - Ctrl+R
+	TALKTYPE_RVR_ANSWER = 253, //Answering report
+	TALKTYPE_RVR_CONTINUE = 252, //Answering the answer of the report
+	TALKTYPE_CHANNEL_R2 = 251, //Talk red anonymously on chat - #d
 };
 
 enum MessageClasses : uint8_t {
-	MESSAGE_STATUS_CONSOLE_RED = 18, /*Red message in the console*/
-	MESSAGE_EVENT_ORANGE = 19, /*Orange message in the console*/
-	MESSAGE_STATUS_CONSOLE_ORANGE = 20,  /*Orange message in the console*/
-	MESSAGE_STATUS_WARNING = 21, /*Red message in game window and in the console*/
-	MESSAGE_EVENT_ADVANCE = 22, /*White message in game window and in the console*/
-	MESSAGE_EVENT_DEFAULT = 23, /*White message at the bottom of the game window and in the console*/
-	MESSAGE_STATUS_DEFAULT = 24, /*White message at the bottom of the game window and in the console*/
-	MESSAGE_INFO_DESCR = 25, /*Green message in game window and in the console*/
-	MESSAGE_STATUS_SMALL = 26, /*White message at the bottom of the game window"*/
-	MESSAGE_STATUS_CONSOLE_BLUE = 27, /*FIXME Blue message in the console*/
+	MESSAGE_CLASS_FIRST = 13,
+	MESSAGE_EVENT_ORANGE = MESSAGE_CLASS_FIRST, /*Orange message in the console*/
+	MESSAGE_STATUS_CONSOLE_ORANGE = 14,  /*Orange message in the console*/
+	MESSAGE_STATUS_WARNING = 15, /*Red message in game window and in the console*/
+	MESSAGE_EVENT_ADVANCE = 16, /*White message in game window and in the console*/
+	MESSAGE_EVENT_DEFAULT = 17, /*White message at the bottom of the game window and in the console*/
+	MESSAGE_STATUS_DEFAULT = 18, /*White message at the bottom of the game window and in the console*/
+	MESSAGE_INFO_DESCR = 19, /*Green message in game window and in the console*/
+	MESSAGE_STATUS_SMALL = 20, /*White message at the bottom of the game window"*/
+	MESSAGE_STATUS_CONSOLE_BLUE = 21, /*FIXME Blue message in the console*/
+	MESSAGE_STATUS_CONSOLE_RED = 22, /*Red message in the console*/
 };
 
 enum FluidColors_t : uint8_t {
@@ -307,6 +481,7 @@ enum TextColor_t : uint8_t {
 };
 
 enum Icons_t {
+	ICON_NONE = 0 << 0,
 	ICON_POISON = 1 << 0,
 	ICON_BURN = 1 << 1,
 	ICON_ENERGY =  1 << 2,
@@ -322,6 +497,7 @@ enum Icons_t {
 	ICON_PARTY_BUFF = 1 << 12,
 	ICON_REDSWORDS = 1 << 13,
 	ICON_PIGEON = 1 << 14,
+	ICON_BLEEDING = 1 << 15,
 };
 
 enum WeaponType_t : uint8_t {
@@ -367,7 +543,8 @@ enum Skulls_t : uint8_t {
 	SKULL_GREEN = 2,
 	SKULL_WHITE = 3,
 	SKULL_RED = 4,
-	SKULL_BLACK = 5
+	SKULL_BLACK = 5,
+	SKULL_ORANGE = 6
 };
 
 enum PartyShields_t : uint8_t {
@@ -483,6 +660,8 @@ enum PlayerFlags : uint64_t {
 	PlayerFlag_IgnoreWeaponCheck = static_cast<uint64_t>(1) << 35,
 	PlayerFlag_CannotBeMuted = static_cast<uint64_t>(1) << 36,
 	PlayerFlag_IsAlwaysPremium = static_cast<uint64_t>(1) << 37,
+	PlayerFlag_CanTurnHop = static_cast<uint64_t>(1) << 38,
+	PlayerFlag_CanMoveAnything = static_cast<uint64_t>(1) << 39
 };
 
 enum ReloadTypes_t : uint8_t  {
@@ -505,6 +684,7 @@ enum ReloadTypes_t : uint8_t  {
 	RELOAD_TYPE_SPELLS,
 	RELOAD_TYPE_TALKACTIONS,
 	RELOAD_TYPE_WEAPONS,
+	RELOAD_TYPE_OUTFITS
 };
 
 static constexpr int32_t CHANNEL_GUILD = 0x00;
@@ -518,6 +698,12 @@ static constexpr int32_t PSTRG_RESERVED_RANGE_SIZE = 10000000;
 //[1000 - 1500];
 static constexpr int32_t PSTRG_OUTFITS_RANGE_START = (PSTRG_RESERVED_RANGE_START + 1000);
 static constexpr int32_t PSTRG_OUTFITS_RANGE_SIZE = 500;
+//[2000 - 2500]
+// static constexpr int32_t PSTRG_MOUNTS_RANGE_START = (PSTRG_RESERVED_RANGE_START + 2000);
+// static constexpr int32_t PSTRG_MOUNTS_RANGE_SIZE = 10;
+static constexpr int32_t PSTRG_MOUNTS_RANGE_START = (PSTRG_RESERVED_RANGE_START + 2000);
+static constexpr int32_t PSTRG_MOUNTS_RANGE_SIZE = 501;
+static constexpr int32_t PSTRG_MOUNTS_CURRENTMOUNT = (PSTRG_MOUNTS_RANGE_START + PSTRG_MOUNTS_RANGE_SIZE);
 
 
 #define IS_IN_KEYRANGE(key, range) (key >= PSTRG_##range##_START && ((key - PSTRG_##range##_START) <= PSTRG_##range##_SIZE))

@@ -108,6 +108,9 @@ class Weapon : public Event
 		void setRequiredMagLevel(uint32_t reqlvl) {
 			magLevel = reqlvl;
 		}
+		bool hasExhaustion() const {
+			return (exhaustion != 0);
+		}
 
 		bool isPremium() const {
 			return premium;
@@ -223,6 +226,7 @@ class Weapon : public Event
 		uint8_t breakChance = 0;
 		bool enabled = true;
 		bool premium = false;
+		int32_t exhaustion = 0;
 		bool wieldUnproperly = false;
 		std::string vocationString = "";
 

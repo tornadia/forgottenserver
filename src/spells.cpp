@@ -121,6 +121,7 @@ void Spells::clear(bool fromLua)
 	clearMaps(fromLua);
 
 	reInitState(fromLua);
+	ids = 0;
 }
 
 LuaScriptInterface& Spells::getScriptInterface()
@@ -147,6 +148,7 @@ bool Spells::registerEvent(Event_ptr event, const pugi::xml_node&)
 {
 	InstantSpell* instant = dynamic_cast<InstantSpell*>(event.get());
 	if (instant) {
+		instant->setId(ids++);
 		auto result = instants.emplace(instant->getWords(), std::move(*instant));
 		if (!result.second) {
 			std::cout << "[Warning - Spells::registerEvent] Duplicate registered instant spell with words: " << instant->getWords() << std::endl;
@@ -156,6 +158,7 @@ bool Spells::registerEvent(Event_ptr event, const pugi::xml_node&)
 
 	RuneSpell* rune = dynamic_cast<RuneSpell*>(event.get());
 	if (rune) {
+		rune->setId(ids++);
 		auto result = runes.emplace(rune->getRuneItemId(), std::move(*rune));
 		if (!result.second) {
 			std::cout << "[Warning - Spells::registerEvent] Duplicate registered rune with id: " << rune->getRuneItemId() << std::endl;
@@ -457,13 +460,32 @@ bool Spell::configureSpell(const pugi::xml_node& node)
 	if ((attr = node.attribute("soul"))) {
 		soul = pugi::cast<uint32_t>(attr.value());
 	}
+	
+	if ((attr = node.attribute("soul"))) {
+		soul = pugi::cast<uint32_t>(attr.value());
+	}
 
-	if ((attr = node.attribute("range"))) {
-		range = pugi::cast<int32_t>(attr.value());
+	if ((attr = node.attribute("icon"))) {
+		icon = (Spells_t)pugi::cast<uint32_t>(attr.value());
 	}
 
 	if ((attr = node.attribute("cooldown")) || (attr = node.attribute("exhaustion")) || (attr = node.attribute("exhaust"))) {
 		cooldown = pugi::cast<uint32_t>(attr.value());
+	}
+
+	if ((attr = node.attribute("groupicons"))) {
+		std::vector<std::string> split = explodeString(attr.as_string(), ",");
+		for(std::vector<std::string>::iterator it = split.begin(); it != split.end(); it++){
+			groupExhaustions[(SpellGroups_t)atoi((*it).c_str())] = 0;
+		}
+	}
+
+	if ((attr = node.attribute("groupexhaustions"))) {
+		int32_t i = 0;
+		std::vector<std::string> split = explodeString(attr.as_string(), ",");
+		for(std::map<SpellGroups_t, uint32_t>::iterator it = groupExhaustions.begin(); it != groupExhaustions.end(); it++, i++){
+			groupExhaustions[it->first] = atoi(split[i].c_str());
+		}
 	}
 
 	if ((attr = node.attribute("premium")) || (attr = node.attribute("prem"))) {
@@ -560,18 +582,18 @@ bool Spell::playerSpellCheck(Player* player) const
 	}
 
 	if (!player->hasFlag(PlayerFlag_HasNoExhaustion)) {
-		bool exhaust = false;
-		if (aggressive) {
-			if (player->hasCondition(CONDITION_EXHAUST_COMBAT)) {
-				exhaust = true;
-			}
-		} else {
-			if (player->hasCondition(CONDITION_EXHAUST_HEAL)) {
-				exhaust = true;
-			}
-		}
-
-		if (exhaust) {
+		// bool exhaust = false;
+		// if (aggressive) {
+			// if (player->hasCondition(CONDITION_EXHAUST_COMBAT)) {
+				// exhaust = true;
+			// }
+		// } else {
+			// if (player->hasCondition(CONDITION_EXHAUST_HEAL)) {
+				// exhaust = true;
+			// }
+		// }
+		if(player->hasExhaustion(getId())){
+		// if (exhaust) {
 			player->sendCancelMessage(RETURNVALUE_YOUAREEXHAUSTED);
 
 			if (isInstant()) {
@@ -580,6 +602,19 @@ bool Spell::playerSpellCheck(Player* player) const
 
 			return false;
 		}
+
+		for(std::map<SpellGroups_t, uint32_t>::const_iterator it = groupExhaustions.begin(); it != groupExhaustions.end(); it++){
+			if(player->hasCondition((ConditionType_t)(1 << (20 + it->first)))){
+				player->sendCancelMessage(RETURNVALUE_YOUAREEXHAUSTED);
+
+				if(isInstant()){
+					g_game.addMagicEffect(player->getPosition(), CONST_ME_POFF);
+				}
+
+				return false;
+			}
+		}
+
 	}
 
 	if (player->getLevel() < level) {
@@ -761,11 +796,18 @@ void Spell::postCastSpell(Player* player, bool finishedCast /*= true*/, bool pay
 	if (finishedCast) {
 		if (!player->hasFlag(PlayerFlag_HasNoExhaustion)) {
 			if (cooldown > 0) {
-				if (aggressive) {
-					player->addCombatExhaust(cooldown);
-				} else {
-					player->addHealExhaust(cooldown);
+				// if (aggressive) {
+					// player->addCombatExhaust(cooldown);
+				// } else {
+					// player->addHealExhaust(cooldown);
+				// }
+				for(std::map<SpellGroups_t, uint32_t>::const_iterator it = groupExhaustions.begin(); it != groupExhaustions.end(); it++){
+					player->addSpellExhaust(it->first, it->second);
+					player->sendSpellCooldown(uint16_t(it->first), uint16_t(it->second), true);
 				}
+
+				player->setExhaustion(getId(), cooldown);
+				player->sendSpellCooldown(uint16_t(getIcon()), uint16_t(getCooldown()), false);
 			}
 
 			if (!player->hasFlag(PlayerFlag_NotGainInFight)) {
@@ -874,7 +916,7 @@ bool InstantSpell::playerCastInstant(Player* player, std::string& param)
 			target = playerTarget;
 			if (!target || target->getHealth() <= 0) {
 				if (!casterTargetOrDirection) {
-					player->addHealExhaust(cooldown);
+					// player->addHealExhaust(cooldown);
 					player->sendCancelMessage(ret);
 					g_game.addMagicEffect(player->getPosition(), CONST_ME_POFF);
 					return false;

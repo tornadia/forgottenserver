@@ -51,6 +51,10 @@ class ConfigManager
 			ONLINE_OFFLINE_CHARLIST,
 			YELL_ALLOW_PREMIUM,
 			FORCE_MONSTERTYPE_LOAD,
+			MONSTER_SPAWN_WALKBACK,
+			DISMOUNT_IN_PZ,  
+			ENABLE_COOLDOWN,
+			ENABLE_MOUNTS,
 
 			LAST_BOOLEAN_CONFIG /* this must be the last one */
 		};
@@ -109,6 +113,7 @@ class ConfigManager
 			MAX_PACKETS_PER_SECOND,
 			SERVER_SAVE_NOTIFY_DURATION,
 			YELL_MINIMUM_LEVEL,
+			MOUNT_TIME,
 
 			LAST_INTEGER_CONFIG /* this must be the last one */
 		};

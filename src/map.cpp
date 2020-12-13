@@ -250,6 +250,15 @@ void Map::moveCreature(Creature& creature, Tile& newTile, bool forceTeleport/* =
 		}
 	}
 
+	// //dismount -- disabled because w/e
+    // if(g_config.getBoolean(ConfigManager::DISMOUNT_IN_PZ)){
+        // if(creature->isRidingMount() && newTile->hasFlag(TILESTATE_PROTECTIONZONE)){
+            // creature->setRidingMount(false);
+            // g_game.changeSpeed(creature, 0);
+            // g_game.internalCreatureChangeOutfit(creature, creature->getCurrentOutfit());
+        // }
+    // }  
+
 	//remove the creature
 	oldTile.removeThing(&creature, 0);
 

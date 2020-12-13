@@ -238,6 +238,12 @@ void mainLoader(int, char*[], ServiceManager* services)
 		return;
 	}
 
+	std::cout << ">> Loading mounts" << std::endl;
+	if (!Mounts::getInstance().loadFromXml()) {
+		startupErrorMessage("Unable to load mounts!");
+		return;
+	}
+
 	std::cout << ">> Checking world type... " << std::flush;
 	std::string worldType = asLowerCaseString(g_config.getString(ConfigManager::WORLD_TYPE));
 	if (worldType == "pvp") {

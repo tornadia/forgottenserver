@@ -27,6 +27,7 @@
 #include "tile.h"
 #include "enums.h"
 #include "creatureevent.h"
+#include "mounts.h"
 
 using ConditionList = std::list<Condition*>;
 using CreatureEventList = std::list<CreatureEvent*>;
@@ -199,7 +200,7 @@ class Creature : virtual public Thing
 			return getSpeed();
 		}
 		int32_t getSpeed() const {
-			return baseSpeed + varSpeed;
+			return baseSpeed + varSpeed + getMountSpeed();
 		}
 		void setSpeed(int32_t varSpeedDelta) {
 			int32_t oldSpeed = getSpeed();
@@ -232,9 +233,28 @@ class Creature : virtual public Thing
 		}
 		void setCurrentOutfit(Outfit_t outfit) {
 			currentOutfit = outfit;
+			if(outfit.lookMount){
+				Mount* mount = Mounts::getInstance().getMountByID(outfit.lookMount);
+				if(mount){
+					mountSpeed = mount->speed;
+					mountAttackSpeed = mount->attackSpeed;
+				}
+			}
 		}
 		const Outfit_t getDefaultOutfit() const {
 			return defaultOutfit;
+		}
+		const bool isRidingMount() const {
+			return ridingMount;
+		}
+		void setRidingMount(bool isRiding) {
+			ridingMount = isRiding;
+		}
+		const int32_t getMountSpeed() const {
+			return (ridingMount ? mountSpeed : 0);
+		}
+		const int32_t getMountAttackSpeed() const {
+			return (ridingMount ? mountAttackSpeed : 0);
 		}
 		bool isInvisible() const;
 		ZoneType_t getZone() const {
@@ -498,6 +518,10 @@ class Creature : virtual public Thing
 		int32_t varSpeed = 0;
 		int32_t health = 1000;
 		int32_t healthMax = 1000;
+
+		bool ridingMount = false;
+		int32_t mountSpeed = 0;
+		int32_t mountAttackSpeed = 0;
 
 		Outfit_t currentOutfit;
 		Outfit_t defaultOutfit;

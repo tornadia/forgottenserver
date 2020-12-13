@@ -74,6 +74,7 @@ class Spells final : public BaseEvents
 
 		std::map<uint16_t, RuneSpell> runes;
 		std::map<std::string, InstantSpell> instants;
+		uint16_t ids = 0;
 
 		friend class CombatSpell;
 		LuaScriptInterface scriptInterface { "Spell Interface" };
@@ -179,6 +180,8 @@ class Spell : public BaseSpell
 		void setManaPercent(uint32_t m) {
 			manaPercent = m;
 		}
+		Spells_t getIcon() const {return icon;}
+		std::map<SpellGroups_t, uint32_t> getGroupExhaustions() const {return groupExhaustions;}
 		bool isPremium() const {
 			return premium;
 		}
@@ -278,6 +281,9 @@ class Spell : public BaseSpell
 		uint32_t magLevel = 0;
 		int32_t range = -1;
 
+		Spells_t icon = SPELL_NONE;
+		std::map<SpellGroups_t, uint32_t> groupExhaustions;
+	
 		uint8_t spellId = 0;
 
 		bool selfTarget = false;

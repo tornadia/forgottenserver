@@ -279,9 +279,18 @@ bool Monsters::deserializeSpell(const pugi::xml_node& node, spellBlock_t& sb, co
 				minDamage = pugi::cast<int32_t>(attr.value());
 				maxDamage = minDamage;
 				tickInterval = 4000;
-			} else if ((attr = node.attribute("bleed")) || (attr = node.attribute("physical"))) {
+			} else if ((attr = node.attribute("bleed"))) {
 				conditionType = CONDITION_BLEEDING;
-				tickInterval = 4000;
+
+				minDamage = pugi::cast<int32_t>(attr.value());
+				maxDamage = minDamage;
+				tickInterval = 10000;
+			} else if ((attr = node.attribute("physical"))) {
+				conditionType = CONDITION_PHYSICAL;
+
+				minDamage = pugi::cast<int32_t>(attr.value());
+				maxDamage = minDamage;
+				tickInterval = 10000;
 			}
 
 			if ((attr = node.attribute("tick"))) {
@@ -306,7 +315,7 @@ bool Monsters::deserializeSpell(const pugi::xml_node& node, spellBlock_t& sb, co
 			combat->setParam(COMBAT_PARAM_BLOCKARMOR, 1);
 			combat->setOrigin(ORIGIN_RANGED);
 		} else if (tmpName == "bleed") {
-			combat->setParam(COMBAT_PARAM_TYPE, COMBAT_PHYSICALDAMAGE);
+			combat->setParam(COMBAT_PARAM_TYPE, COMBAT_BLEEDDAMAGE);
 		} else if (tmpName == "poison" || tmpName == "earth") {
 			combat->setParam(COMBAT_PARAM_TYPE, COMBAT_EARTHDAMAGE);
 		} else if (tmpName == "fire") {
@@ -435,9 +444,12 @@ bool Monsters::deserializeSpell(const pugi::xml_node& node, spellBlock_t& sb, co
 			} else if (tmpName == "dazzlecondition" || tmpName == "holycondition") {
 				conditionType = CONDITION_DAZZLED;
 				tickInterval = 10000;
-			} else if (tmpName == "physicalcondition" || tmpName == "bleedcondition") {
+			} else if (tmpName == "physicalcondition") {
+				conditionType = CONDITION_PHYSICAL;
+				tickInterval = 10000;
+			} else if (tmpName == "bleedcondition") {
 				conditionType = CONDITION_BLEEDING;
-				tickInterval = 4000;
+				tickInterval = 10000;
 			}
 
 			if ((attr = node.attribute("tick"))) {
@@ -944,6 +956,10 @@ MonsterType* Monsters::loadMonster(const std::string& file, const std::string& m
 			if ((attr = node.attribute("addons"))) {
 				mType->info.outfit.lookAddons = pugi::cast<uint16_t>(attr.value());
 			}
+
+			if ((attr = node.attribute("mount"))) {
+				mType->info.outfit.lookMount = pugi::cast<uint16_t>(attr.value());
+			}
 		} else if ((attr = node.attribute("typeex"))) {
 			mType->info.outfit.lookTypeEx = pugi::cast<uint16_t>(attr.value());
 		} else {
@@ -991,7 +1007,7 @@ MonsterType* Monsters::loadMonster(const std::string& file, const std::string& m
 				std::string tmpStrValue = asLowerCaseString(attr.as_string());
 				if (tmpStrValue == "physical") {
 					mType->info.damageImmunities |= COMBAT_PHYSICALDAMAGE;
-					mType->info.conditionImmunities |= CONDITION_BLEEDING;
+					mType->info.conditionImmunities |= CONDITION_PHYSICAL;
 				} else if (tmpStrValue == "energy") {
 					mType->info.damageImmunities |= COMBAT_ENERGYDAMAGE;
 					mType->info.conditionImmunities |= CONDITION_ENERGY;
@@ -1014,6 +1030,9 @@ MonsterType* Monsters::loadMonster(const std::string& file, const std::string& m
 				} else if (tmpStrValue == "death") {
 					mType->info.damageImmunities |= COMBAT_DEATHDAMAGE;
 					mType->info.conditionImmunities |= CONDITION_CURSED;
+				} else if (tmpStrValue == "bleed") {
+					mType->info.damageImmunities |= COMBAT_BLEEDDAMAGE;
+					mType->info.conditionImmunities |= CONDITION_BLEEDING;
 				} else if (tmpStrValue == "lifedrain") {
 					mType->info.damageImmunities |= COMBAT_LIFEDRAIN;
 				} else if (tmpStrValue == "manadrain") {
@@ -1026,15 +1045,13 @@ MonsterType* Monsters::loadMonster(const std::string& file, const std::string& m
 					mType->info.conditionImmunities |= CONDITION_DRUNK;
 				} else if (tmpStrValue == "invisible" || tmpStrValue == "invisibility") {
 					mType->info.conditionImmunities |= CONDITION_INVISIBLE;
-				} else if (tmpStrValue == "bleed") {
-					mType->info.conditionImmunities |= CONDITION_BLEEDING;
 				} else {
 					std::cout << "[Warning - Monsters::loadMonster] Unknown immunity name " << attr.as_string() << ". " << file << std::endl;
 				}
 			} else if ((attr = immunityNode.attribute("physical"))) {
 				if (attr.as_bool()) {
 					mType->info.damageImmunities |= COMBAT_PHYSICALDAMAGE;
-					mType->info.conditionImmunities |= CONDITION_BLEEDING;
+					mType->info.conditionImmunities |= CONDITION_PHYSICAL;
 				}
 			} else if ((attr = immunityNode.attribute("energy"))) {
 				if (attr.as_bool()) {
@@ -1045,6 +1062,11 @@ MonsterType* Monsters::loadMonster(const std::string& file, const std::string& m
 				if (attr.as_bool()) {
 					mType->info.damageImmunities |= COMBAT_FIREDAMAGE;
 					mType->info.conditionImmunities |= CONDITION_FIRE;
+				}
+			} else if ((attr = immunityNode.attribute("bleed"))) {
+				if (attr.as_bool()) {
+					mType->info.damageImmunities |= COMBAT_BLEEDDAMAGE;
+					mType->info.conditionImmunities |= CONDITION_BLEEDING;
 				}
 			} else if ((attr = immunityNode.attribute("poison")) || (attr = immunityNode.attribute("earth"))) {
 				if (attr.as_bool()) {
@@ -1086,10 +1108,6 @@ MonsterType* Monsters::loadMonster(const std::string& file, const std::string& m
 			} else if ((attr = immunityNode.attribute("outfit"))) {
 				if (attr.as_bool()) {
 					mType->info.conditionImmunities |= CONDITION_OUTFIT;
-				}
-			} else if ((attr = immunityNode.attribute("bleed"))) {
-				if (attr.as_bool()) {
-					mType->info.conditionImmunities |= CONDITION_BLEEDING;
 				}
 			} else if ((attr = immunityNode.attribute("drunk"))) {
 				if (attr.as_bool()) {
@@ -1168,6 +1186,10 @@ MonsterType* Monsters::loadMonster(const std::string& file, const std::string& m
 				mType->info.elementMap[COMBAT_LIFEDRAIN] = pugi::cast<int32_t>(attr.value());
 			} else if ((attr = elementNode.attribute("manadrainPercent"))) {
 				mType->info.elementMap[COMBAT_MANADRAIN] = pugi::cast<int32_t>(attr.value());
+			} else if ((attr = elementNode.attribute("healingPercent"))) {
+				mType->info.elementMap[COMBAT_HEALING] = pugi::cast<int32_t>(attr.value());
+			} else if ((attr = elementNode.attribute("bleedingPercent"))) {
+				mType->info.elementMap[COMBAT_BLEEDDAMAGE] = pugi::cast<int32_t>(attr.value());
 			} else {
 				std::cout << "[Warning - Monsters::loadMonster] Unknown element percent. " << file << std::endl;
 			}
