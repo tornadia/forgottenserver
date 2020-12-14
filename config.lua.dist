@@ -118,3 +118,15 @@ ownerName = ""
 ownerEmail = ""
 url = "https://otland.net/"
 location = "Sweden"
+
+-- custom (not fully implemented)
+--Enable mounts?
+enable_mounts = true
+--Mount time
+mount_time = 2000
+--Should players be dismounted in protection zone ?
+dismount_player_in_pz = true
+--Enable spellcooldown?
+enable_cooldown = false
+--Should monsters walk back to their spawn after they lose target?
+monster_spawn_walkback = true

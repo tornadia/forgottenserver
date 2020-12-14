@@ -75,6 +75,8 @@
 			<flag ignoreweaponcheck="1" />
 			<flag cannotbemuted="1" />
 			<flag isalwayspremium="1" />
+			<flag canturnhop="1" />
+			<flag canmoveanything="1" />
 		</flags>
 	</group>
 </groups>
