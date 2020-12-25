@@ -164,6 +164,10 @@ bool ConfigManager::load()
 	boolean[ONLINE_OFFLINE_CHARLIST] = getGlobalBoolean(L, "showOnlineStatusInCharlist", false);
 	boolean[YELL_ALLOW_PREMIUM] = getGlobalBoolean(L, "yellAlwaysAllowPremium", false);
 	boolean[FORCE_MONSTERTYPE_LOAD] = getGlobalBoolean(L, "forceMonsterTypesOnLoad", true);
+	boolean[MONSTER_SPAWN_WALKBACK] = getGlobalBoolean(L, "monster_spawn_walkback", true);
+	boolean[DISMOUNT_IN_PZ] = getGlobalBoolean(L, "dismount_player_in_pz", true);  
+	boolean[ENABLE_COOLDOWN] = getGlobalBoolean(L, "enable_cooldown", true);
+	boolean[ENABLE_MOUNTS] = getGlobalBoolean(L, "enable_mounts", true);
 
 	string[DEFAULT_PRIORITY] = getGlobalString(L, "defaultPriority", "high");
 	string[SERVER_NAME] = getGlobalString(L, "serverName", "");
@@ -200,11 +204,6 @@ bool ConfigManager::load()
 	integer[MAX_PACKETS_PER_SECOND] = getGlobalNumber(L, "maxPacketsPerSecond", 25);
 	integer[SERVER_SAVE_NOTIFY_DURATION] = getGlobalNumber(L, "serverSaveNotifyDuration", 5);
 	integer[YELL_MINIMUM_LEVEL] = getGlobalNumber(L, "yellMinimumLevel", 2);
-
-	integer[MONSTER_SPAWN_WALKBACK] = getGlobalBoolean(L, "monster_spawn_walkback", true);
-	integer[DISMOUNT_IN_PZ] = getGlobalBoolean(L, "dismount_player_in_pz", true);  
-	integer[ENABLE_COOLDOWN] = getGlobalBoolean(L, "enable_cooldown", true);
-	integer[ENABLE_MOUNTS] = getGlobalBoolean(L, "enable_mounts", true);
 	integer[MOUNT_TIME] = getGlobalNumber(L, "mount_time", 2000);
 	
 	loaded = true;
