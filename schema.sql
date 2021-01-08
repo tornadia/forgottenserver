@@ -28,6 +28,8 @@ CREATE TABLE IF NOT EXISTS `players` (
   `looklegs` int(11) NOT NULL DEFAULT '0',
   `looktype` int(11) NOT NULL DEFAULT '136',
   `lookaddons` int(11) NOT NULL DEFAULT '0',
+  `lookmount` int(11) NOT NULL DEFAULT '0',
+  `ridingmount` tinyint(1) unsigned NOT NULL DEFAULT '0',
   `direction` tinyint(1) unsigned NOT NULL DEFAULT '2',
   `maglevel` int(11) NOT NULL DEFAULT '0',
   `mana` int(11) NOT NULL DEFAULT '0',
